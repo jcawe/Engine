@@ -2,8 +2,6 @@
 
 hide empty members
 
-title Logic
-
 class Entity
 interface IComponent
 interface ISystem
@@ -11,18 +9,13 @@ interface ISystem
 Entity *-- IComponent
 ISystem -right-> Entity : Uses >
 
-interface IContext {
+class Context {
     +Entities
     +Systems
 }
-class Context
-
-IContext <|-right- Context
 
 Context *-- Entity
 Context *-- ISystem
-
-ISystem -up-> IContext : Uses >
 
 interface IGame {
     +Run()
@@ -43,6 +36,7 @@ interface IInitSystem {
 }
 
 interface IUpdateSystem {
+    +Filter
     +Update()
 }
 
@@ -51,20 +45,60 @@ interface ICleanSystem {
 }
 
 interface IRenderSystem {
+    +Filter
     +Render()
 }
-
-class RenderSystem
-class InputSystem
 
 ISystem <|-- IInitSystem
 ISystem <|-- IUpdateSystem
 ISystem <|-- ICleanSystem
 ISystem <|-- IRenderSystem
+@enduml
+
+@startuml
+
+hide empty members
+
+interface IRenderSystem
+interface IUpdateSystem
+
+class RenderSystem
+class InputSystem
+
 IRenderSystem <|-- RenderSystem
 IUpdateSystem <|-- InputSystem
 
-interface ITrigger
+interface ITrigger {
+    +InputTrigger
+    +Action
+}
+
+class Trigger<T> {
+    -Input
+}
+
+class Control {
+    +InputDeviceType
+    +Triggers
+}
+
+ITrigger <|-- Trigger
+
+InputSystem -->  Control : Uses >
+Control *-left- ITrigger
+
+interface IInputControl {
+    +InputDeviceType
+    +CheckInput()
+}
+
+class KeyboardControl
+class MouseControl
+
+IInputControl <|-- KeyboardControl
+IInputControl <|-- MouseControl
+
+InputSystem *-- IInputControl
 
 @enduml
 
@@ -72,53 +106,38 @@ interface ITrigger
 
 hide empty members
 
-title Graphics
-
 package OpenTk.Graphics {
-    class GL <<(C,Orange)<b>static</b> >>
+    ' class GL <<(C,Orange)<b>static</b> >>
     class GameWindow
 }
 
-package Logic {
+package Engine {
     interface IComponent
     class Game
-    class RenderSystem
-}
+    ' class RenderSystem
 
-package Graphics {
-    interface ITextureRender {
-        +Render(ITexture)
+    class Sprite {
+        +Image
     }
 
-    interface ITextRender {
-        +Render(string)
+    class AnimatedSprite {
+        +Sprites
+        +Ticks
     }
 
-    class TextureRender
-    class TextRender
-    class Texture {
-        +Position
-        +Bitmap
-    }
     class Text {
-        +Text
+        +Value
         +Font
     }
 }
 
-ITextureRender <|-up- TextureRender
-ITextRender <|-up- TextRender
+Text::Font *-- Sprite
+AnimatedSprite::Sprites *-- Sprite
 
-ITextureRender::Render -[#Green]-> Texture : Uses >
-ITextRender::Render -[#Green]-> Text : Uses >
+IComponent <|-- Sprite
+IComponent <|-left- AnimatedSprite
+IComponent <|-right- Text
 
-TextureRender --> GL : Uses >
-TextRender --> ITextureRender : Uses >
-IComponent <|-left- Texture
-IComponent <|-left[#Blue]- Text
 GameWindow <|-- Game
-
-RenderSystem -[#Blue]-> ITextureRender : Uses >
-RenderSystem --> ITextRender : Uses >
 
 @enduml
