@@ -1,0 +1,80 @@
+@startuml
+
+hide empty members
+
+package Engine {
+    interface IGame
+    class Game
+
+    IGame <|-- Game
+
+    interface IActor
+    interface IRenderable
+    
+    package Controls {
+        interface IControl
+        abstract AbstractControl<T>
+        abstract "AbstractControl<Key>" as KeyAbstractControl
+        abstract "AbstractControl<MouseButton>" as MouseButtonAbstractControl
+        class KeyboardControl
+        class MouseControl
+        interface ITrigger
+        class Trigger<T>
+
+        IControl <|-- AbstractControl
+        AbstractControl <|.. KeyAbstractControl : <<binds>> T : Key
+        AbstractControl <|.. MouseButtonAbstractControl : <<binds>> T : MouseButton
+        KeyAbstractControl <|-- KeyboardControl
+        MouseButtonAbstractControl <|-- MouseControl
+        ITrigger <|-- Trigger
+        IControl --> ITrigger : Uses >
+    }
+
+    package Managers {
+        interface IActorManager
+        class ActorManager
+        interface IRenderManager
+        class RenderManager
+        interface IControlManager
+        class ControlManager
+        interface IDrawingManager
+        class DrawingManager
+
+        IActorManager <|-- ActorManager
+        IRenderManager <|-- RenderManager
+        IControlManager <|-- ControlManager
+        IDrawingManager <|-- DrawingManager
+
+    }
+
+    Game *-- IActor : Contains >
+    Game *-- IRenderable : Contains >
+    Game *-- IControl : Contains >
+
+    Game --> IActorManager : Uses >
+    Game --> IRenderManager : Uses >
+    Game --> IControlManager : Uses >
+    
+    ActorManager -up[#Green]-> IActor : Uses >
+    RenderManager -up-> IRenderable : Uses >
+    ControlManager -up-> IControl : Uses >
+}
+
+package OpenTK {
+    package "Game" as OpenTkGame {
+        interface IGameWindow
+        class GameWindow
+
+        IGameWindow <|-- GameWindow
+    }
+
+    package Graphics.OpenGL {
+        class GL <<static>>
+    }
+}
+
+GameWindow <|-- Game
+RenderManager -up[#Blue]-> GL : Uses >
+DrawingManager -up[#Blue]-> GL : Uses >
+
+@enduml

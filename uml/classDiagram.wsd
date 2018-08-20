@@ -1,0 +1,119 @@
+@startuml
+
+hide empty members
+
+class Game {
+    -Update()
+    -Render()
+}
+interface IGame {
+    +Run()
+    +AddControls(params IControl[] controls)
+    +AddActor(params IActor[] actors)
+    +AddRenderable(params IRenderable[] rederables)
+}
+
+IGame <|-- Game
+
+interface IRenderManager {
+    +SwapBuffers : event
+    +Render(rederables : IRenderable[])
+}
+interface IControlManager {
+    +Update(IControl[], IInputDevice[])
+}
+class RenderManager
+class ControlManager
+
+IRenderManager <|-- RenderManager
+IControlManager <|-- ControlManager
+
+Game::Render -right--> IRenderManager::Render
+Game::Update -left--> IControlManager::Update
+
+interface IRenderable {
+    +Render()
+}
+
+RenderManager -right-> IRenderable::Render
+
+interface IControl {
+    +DeviceType : InputDeviceType
+    +Triggers : ITrigger[]
+    +Update(IInputDevice)
+}
+
+ControlManager -left-> IControl::Update
+
+abstract AbstractControl<T> {
+    +{abstract}DeviceType : InputDeviceType
+    +{abstract}Update(IInputDevice)
+    #CheckButtons<TDevice>(TDevice, Func<TDevice, T, bool>)
+    -GetValues() : T[]
+}
+
+IControl <|-down- AbstractControl
+
+abstract "AbstractControl<Key>" as KeyAbstractControl
+abstract "AbstractControl<MouseButton>" as MouseButtonAbstractControl
+
+class KeyboardControl
+class MouseControl
+AbstractControl <|.. KeyAbstractControl : <<binds>> T : Key
+AbstractControl <|.. MouseButtonAbstractControl : <<binds>> T : MouseButton
+KeyAbstractControl <|-- KeyboardControl
+MouseButtonAbstractControl <|-- MouseControl
+
+interface ITrigger {
+    +CheckTrigger(int input)
+}
+
+AbstractControl::CheckButtons -right-> ITrigger::CheckTrigger
+
+class Trigger<T> {
+    -Input : T
+    -Action : Action
+}
+
+ITrigger <|-right- Trigger
+
+interface IActor {
+    +Update()
+}
+
+interface IActorManager {
+    +Update(IActor[] actors)
+}
+
+class ActorManager {
+    -Actors : List<IActor>
+}
+
+IActorManager <|-- ActorManager
+
+Game::Update --> IActorManager::Update
+
+ActorManager -right-> IActor::Update
+
+interface IDrawingManager {
+    +DrawRectangle(color, x, y, width, height)
+}
+
+class DrawingManager {
+
+}
+
+IDrawingManager <|-- DrawingManager
+
+IRenderable .down.> IDrawingManager
+
+class DrawSpace {
+    +Width : float
+    +Height : float
+}
+
+DrawSpace -down-> Game : is a constructor\nparameter of >
+
+note left of DrawSpace : Contains the size of game window
+
+@enduml
