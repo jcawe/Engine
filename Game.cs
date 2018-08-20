@@ -1,54 +1,60 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using Engine.Controls;
 using Engine.Managers;
+using Engine.Systems;
 using OpenTK;
 using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 
 namespace Engine
 {
     public class Game : GameWindow, IGame
     {
-        readonly IRenderManager _renderManager;
-        readonly IControlManager _controlManager;
-        readonly IActorManager _actorManager;
+        readonly Context _context;
 
-        readonly List<IActor> _actors = new List<IActor>();
-        readonly List<IRenderable> _renderables = new List<IRenderable>();
-        readonly List<IControl> _controls = new List<IControl>();
-
-        int IGame.Width => ClientRectangle.Width;
-        int IGame.Height => ClientRectangle.Height;
-        
-        public Game(DrawScreen screen, string title, IRenderManager render, IControlManager control, IActorManager actorManager) 
+        public Game(DrawScreen screen, string title, Context context) 
             : base(screen.Width, screen.Height, GraphicsMode.Default, title, GameWindowFlags.Default, DisplayDevice.Default, 4, 5, GraphicsContextFlags.ForwardCompatible)
         {
-            _renderManager = render ?? throw new ArgumentNullException(nameof(render));
-            _controlManager = control ?? throw new ArgumentNullException(nameof(control));
-            _actorManager = actorManager ?? throw new ArgumentNullException(nameof(actorManager));
+            _context = context;
             
+            Load += Init;
             UpdateFrame += Update;
             RenderFrame += Render;
-            _renderManager.SwapBuffers += SwapBuffers;
+            Closing += Clean;
+        }
+
+        private void Init(object sender, EventArgs e)
+        {
+            foreach(var system in _context.Systems.OfType<IInitSystem>())
+                system.Init();
         }
 
         private void Render(object sender, FrameEventArgs e)
         {
-            _renderManager.Render(_renderables.ToArray());
+            GL.ClearColor(0,0,0,0);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+            
+            foreach(var system in _context.Systems.OfType<IRenderSystem>())
+                system.Render(_context.Entities.Where(system.Filter));
+
+            SwapBuffers();
         }
 
         private void Update(object sender, FrameEventArgs e)
         {
-            _controlManager.Update(_controls.ToArray(), Keyboard, Mouse);
-            _actorManager.Update(_actors.ToArray());
+            foreach(var system in _context.Systems.OfType<IUpdateSystem>())
+                system.Update(_context.Entities.Where(system.Filter));
+        }
+
+        private void Clean(object sender, CancelEventArgs e)
+        {
+            foreach(var system in _context.Systems.OfType<ICleanSystem>())
+                system.Clean();
         }
 
         void IGame.Run() => Run(30.0);
-
-        public void AddControl(params IControl[] controls) => _controls.AddRange(controls);
-
-        public void AddActor(params IActor[] actors) => _actors.AddRange(actors);
-
-        public void AddRederable(params IRenderable[] renderables) => _renderables.AddRange(renderables);
     }
 }

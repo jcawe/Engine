@@ -1,0 +1,124 @@
+@startuml
+
+hide empty members
+
+title Logic
+
+class Entity
+interface IComponent
+interface ISystem
+
+Entity *-- IComponent
+ISystem -right-> Entity : Uses >
+
+interface IContext {
+    +Entities
+    +Systems
+}
+class Context
+
+IContext <|-right- Context
+
+Context *-- Entity
+Context *-- ISystem
+
+ISystem -up-> IContext : Uses >
+
+interface IGame {
+    +Run()
+}
+
+class Game {
+    -Init()
+    -Update()
+    -Clean()
+    -Render()
+}
+
+IGame <|-right- Game
+Game *-- Context
+
+interface IInitSystem {
+    +Init()
+}
+
+interface IUpdateSystem {
+    +Update()
+}
+
+interface ICleanSystem {
+    +Clean()
+}
+
+interface IRenderSystem {
+    +Render()
+}
+
+class RenderSystem
+class InputSystem
+
+ISystem <|-- IInitSystem
+ISystem <|-- IUpdateSystem
+ISystem <|-- ICleanSystem
+ISystem <|-- IRenderSystem
+IRenderSystem <|-- RenderSystem
+IUpdateSystem <|-- InputSystem
+
+interface ITrigger
+
+@enduml
+
+@startuml
+
+hide empty members
+
+title Graphics
+
+package OpenTk.Graphics {
+    class GL <<(C,Orange)<b>static</b> >>
+    class GameWindow
+}
+
+package Logic {
+    interface IComponent
+    class Game
+    class RenderSystem
+}
+
+package Graphics {
+    interface ITextureRender {
+        +Render(ITexture)
+    }
+
+    interface ITextRender {
+        +Render(string)
+    }
+
+    class TextureRender
+    class TextRender
+    class Texture {
+        +Position
+        +Bitmap
+    }
+    class Text {
+        +Text
+        +Font
+    }
+}
+
+ITextureRender <|-up- TextureRender
+ITextRender <|-up- TextRender
+
+ITextureRender::Render -[#Green]-> Texture : Uses >
+ITextRender::Render -[#Green]-> Text : Uses >
+
+TextureRender --> GL : Uses >
+TextRender --> ITextureRender : Uses >
+IComponent <|-left- Texture
+IComponent <|-left[#Blue]- Text
+GameWindow <|-- Game
+
+RenderSystem -[#Blue]-> ITextureRender : Uses >
+RenderSystem --> ITextRender : Uses >
+
+@enduml

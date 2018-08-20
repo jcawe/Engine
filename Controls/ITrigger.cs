@@ -1,7 +1,10 @@
+using System;
+
 namespace Engine.Controls
 {
     public interface ITrigger
     {
-         void CheckTrigger(int input);
+        int InputTrigger { get; }
+        Action Action {get;}
     }
 }
