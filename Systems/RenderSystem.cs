@@ -6,7 +6,7 @@ namespace Engine.Systems
 {
     public class RenderSystem : IRenderSystem
     {
-        //TODO:  Filter of RenderSystem
+        //TODO: Filter of RenderSystem
         public Func<Entity, bool> Filter => throw new NotImplementedException();
 
         public void Render(IEnumerable<Entity> entities)
